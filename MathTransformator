@@ -1,0 +1,93 @@
+function transformSimulator
+    
+    fig = figure('Name', 'Dönüşümler', ...
+        'NumberTitle', 'off', 'Position', [300 300 600 400]);
+    
+    popup = uicontrol('Style', 'popupmenu', 'String', {'Laplace Dönüşümü', 'Z Dönüşümü', 'Fourier Dönüşümü'}, ...
+        'Position', [50 350 100 30], 'Callback', @popup_callback);
+    
+    checkbox = uicontrol('Style', 'checkbox', 'String', 'Ters', ...
+        'Position', [50 300 100 30], 'Callback', @checkbox_callback);
+    
+   
+    
+    function_panel = uipanel('Title', 'Fonksiyon', 'Position', [0.1 0.5 0.8 0.4]);
+    input_text = uicontrol('Parent', function_panel, 'Style', 'edit', 'Position', [10 10 300 30]);
+    set(function_panel, 'Position', [0.1 0.5 0.8 0.2]);
+    
+    set(fig, 'MenuBar', 'none');
+    set(fig, 'ToolBar', 'none');
+    
+    
+    function_panel1 = uipanel('Title', 'Dönüştürülmüş Fonksiyon', 'Position', [0.1 0.2 0.8 0.4]);
+    output_text = uicontrol('Parent', function_panel1, 'Style', 'edit','Position', [10 10 300 30]);
+    set(function_panel1, 'Position', [0.1 0.2 0.8 0.2]);
+    set(output_text, 'Enable', 'off')
+    
+    uicontrol('Style', 'pushbutton', 'String', 'Hesapla', ...
+        'Position', [200 315 100 30], 'Callback', @calculate_callback);
+    
+        function popup_callback(source, ~)
+           
+            transform_type = source.Value;
+            transform_name = source.String{transform_type};
+           
+            switch transform_name
+                case 'Laplace'
+                    set(input_text, 'String', 'exp(-t)*sin(t)');
+                case 'z'
+                    set(input_text, 'String', '0.5^n');
+                case 'Fourier'
+                    set(input_text, 'String', 'sin(t)');
+            end
+        end
+    
+        function checkbox_callback(source, ~)
+            
+            inverse = source.Value;
+            
+            if inverse
+                set(input_text, 'String', strcat('inv', input_text.String));
+            else
+                set(input_text, 'String', strrep(input_text.String, 'inv', ''));
+            end
+        end
+    
+        function calculate_callback(~, ~)
+         
+            input_function = input_text.String;
+           
+            input_symbolic = str2sym(input_function);
+          
+            transform_type = popup.Value;
+            transform_name = popup.String{transform_type};
+           
+            inverse = checkbox.Value;
+            
+            switch transform_name
+                case 'Laplace'
+                    if inverse
+                        output_function = ilaplace(input_symbolic);
+                    else
+                        output_function = laplace(input_symbolic);
+                    end
+                case 'z'
+                    if inverse
+                        output_function = iztrans(input_symbolic);
+                    else
+                        output_function = ztrans(input_symbolic);
+                    end
+                case 'Fourier'
+                    if inverse
+                        output_function = ifourier(input_symbolic);
+                    else
+                        output_function = fourier(input_symbolic);
+                    end
+            end
+      
+            output_string = char(output_function);
+            set(output_text, 'String', output_string);
+        end
+    end
+    
+    
